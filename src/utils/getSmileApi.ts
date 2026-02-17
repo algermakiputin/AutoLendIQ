@@ -30,7 +30,15 @@ export const getListOfProviders = async () => {
   }
 };
 
-export const initializeSmileLink = async () => {
+export const initializeSmileLink = async ({
+  name,
+  email,
+  phoneNumber,
+}: {
+  name: string;
+  email: string;
+  phoneNumber: string;
+}) => {
   const host = import.meta.env.VITE_GET_SMILE_API_HOST;
   const apiKey = import.meta.env.VITE_GET_SMILE_API_KEY;
   const apiSecret = import.meta.env.VITE_GET_SMILE_API_SECRET;
@@ -45,7 +53,13 @@ export const initializeSmileLink = async () => {
         Authorization: `Basic ${signature}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({}), // Empty object as per original code
+      body: JSON.stringify({
+        externalMetadata: {
+          email: email,
+          name: name,
+          phoneNumber: phoneNumber,
+        },
+      }), // Empty object as per original code
     });
 
     if (!response.ok) {
@@ -56,6 +70,7 @@ export const initializeSmileLink = async () => {
 
     // Structure the linkInitData based on your original logic
     const linkInitData = {
+      userId: result.data.user?.id,
       token: result.data.token.accessToken,
       // Customizations for your Hackathon Demo
       topProviders: ["bir_orus_ph", "bdo", "accenture_ph"],
@@ -70,11 +85,11 @@ export const initializeSmileLink = async () => {
   }
 };
 
-export const getIncome = async () => {
+export const getIncome = async (userId: string) => {
   const encodedCredentials = btoa(`${username}:${password}`);
 
   try {
-    const response = await fetch("https://sandbox.smileapi.io/v1/incomes/", {
+    const response = await fetch(`${baseUrl}/eincomes?userId=${userId}`, {
       headers: {
         Authorization: `Basic ${encodedCredentials}`,
       },
@@ -96,15 +111,18 @@ export const getIncome = async () => {
   }
 };
 
-export const getEmployments = async () => {
+export const getEmployments = async (userId: string) => {
   const encodedCredentials = btoa(`${username}:${password}`);
 
   try {
-    const response = await fetch("https://sandbox.smileapi.io/v1/employments", {
-      headers: {
-        Authorization: `Basic ${encodedCredentials}`,
+    const response = await fetch(
+      `https://sandbox.smileapi.io/v1/employments?userId=${userId}`,
+      {
+        headers: {
+          Authorization: `Basic ${encodedCredentials}`,
+        },
       },
-    });
+    );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -112,6 +130,64 @@ export const getEmployments = async () => {
     // This reads the stream and parses it into a JS object
     const data = await response.json();
     console.log(`employments: `, data);
+    return data;
+  } catch (error) {
+    console.error(`Failed to getListOfProviders `, JSON.stringify(error));
+    return {
+      success: false,
+      message: JSON.stringify(error),
+    };
+  }
+};
+
+export const getIdentify = async (userId: string) => {
+  const encodedCredentials = btoa(`${username}:${password}`);
+  console.log(`Getting identify for userId: ${userId}`);
+  try {
+    const response = await fetch(
+      `https://sandbox.smileapi.io/v1/identities?size=10&userId=${userId}`,
+      {
+        headers: {
+          Authorization: `Basic ${encodedCredentials}`,
+        },
+      },
+    );
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    // This reads the stream and parses it into a JS object
+    const data = await response.json();
+    console.log(`identify: `, data);
+    return data;
+  } catch (error) {
+    console.error(`Failed to getListOfProviders `, JSON.stringify(error));
+    return {
+      success: false,
+      message: JSON.stringify(error),
+    };
+  }
+};
+
+export const getTransactions = async (userId: string) => {
+  const encodedCredentials = btoa(`${username}:${password}`);
+
+  try {
+    const response = await fetch(
+      `${baseUrl}/transactions?size=10&userId=${userId}`,
+      {
+        headers: {
+          Authorization: `Basic ${encodedCredentials}`,
+        },
+      },
+    );
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    // This reads the stream and parses it into a JS object
+    const data = await response.json();
+    console.log(`identify: `, data);
     return data;
   } catch (error) {
     console.error(`Failed to getListOfProviders `, JSON.stringify(error));

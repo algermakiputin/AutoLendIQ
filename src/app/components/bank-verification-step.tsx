@@ -13,17 +13,21 @@ import {
   getEmployments,
   getIncome,
   getListOfProviders,
+  getIdentify,
+  getTransactions,
 } from "../../utils/getSmileApi";
-import SmileWinkButton from "./smileapi/widget";
 import { useSmileWink } from "../../hooks/useSmileWink";
 
 interface BankVerificationStepProps {
   loanData: {
     bankConnected?: boolean;
-    bankName?: string;
-    accountVerified?: boolean;
-    accountBalance?: number;
-    monthlyIncome?: number;
+    bank_name?: string;
+    account_verified?: boolean;
+    account_balance?: number;
+    monthly_income?: number;
+    applicantName?: string;
+    applicantEmail?: string;
+    applicantPhone?: string;
   };
   setLoanData: (data: any) => void;
   onNext: () => void;
@@ -46,6 +50,12 @@ export function BankVerificationStep({
   const [connectionStatus, setConnectionStatus] = useState<
     "idle" | "connecting" | "connected" | "error"
   >(loanData.bankConnected ? "connected" : "idle");
+  console.log(`BankVerificationStep loanData: `, loanData);
+  const [smileApiAccount, setSmileApiAccount] = useState({
+    accountId: "",
+    providerId: "",
+    userId: "",
+  });
   const [selectedBank, setSelectedBank] = useState<string | null>(
     loanData.bankName || null,
   );
@@ -54,20 +64,47 @@ export function BankVerificationStep({
 
   const { isLoading, openWidget, closeWidget, iframeRef, isOpen } =
     useSmileWink({
+      applicationData: {
+        applicantName: loanData.applicantName,
+        applicantEmail: loanData.applicantEmail,
+        applicantPhone: loanData.applicantPhone,
+      },
       onSuccess: async (response) => {
         console.log(`response: `, response);
+        setSmileApiAccount({
+          accountId: response.accountId,
+          providerId: response.providerId,
+          userId: response.userId,
+        });
+        setSelectedBank(response.providerId);
         setConnectionStatus("connected");
-        await getEmployments();
-        await getIncome();
       },
-      onExit: () => {},
+      onExit: async (response) => {
+        if (smileApiAccount.accountId && smileApiAccount.providerId) {
+          await getIdentify(smileApiAccount.userId);
+          await getTransactions(smileApiAccount.userId);
+          await getEmployments(smileApiAccount.userId);
+          await getIncome(smileApiAccount.userId);
+        } else {
+          setConnectionStatus("idle");
+          setSelectedBank(null);
+          setLoanData({
+            ...loanData,
+            bankConnected: false,
+            bankName: undefined,
+            accountVerified: false,
+          });
+        }
+      },
     });
-
+  console.log(`connectionStatus: `, connectionStatus);
   // Mock bank list - in production, this would come from GetSMILE API
   const [popularBanks, setPopularBanks] = useState([]);
 
   const [allBanks, setAllBanks] = useState([]);
-
+  useEffect(() => {
+    getIdentify(smileApiAccount.userId);
+  }, []);
   const processProviders = (items) => {
     // 1. Define high-priority IDs for the PH market
     const popularIds = [
@@ -146,7 +183,6 @@ export function BankVerificationStep({
         logo: item?.logoUrl,
         popular: true,
       }));
-      console.log(`data sources: `, dataSources);
       setPopularBanks(dataSources);
     };
     fetchProviders();
@@ -158,10 +194,13 @@ export function BankVerificationStep({
     <div className="space-y-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="mb-2 text-primary">Connect Your Bank Account</h1>
+        <h1 className="mb-2 text-primary">
+          Connect Your Employment Account Account
+        </h1>
         <p className="text-muted-foreground">
-          Securely connect your bank account to verify your income and financial
-          standing. This helps us provide you with the best loan terms.
+          Securely connect your employment account to verify your income and
+          financial standing. This helps us provide you with the best loan
+          terms.
         </p>
       </div>
       {/* Security Badges */}
@@ -217,28 +256,50 @@ export function BankVerificationStep({
         style={{ display: isOpen ? "none" : "block" }}
       >
         {connectionStatus === "idle" && (
-          <>
-            <h2 className="mb-6">Select Your Provider</h2>
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="text-2xl font-bold text-primary mb-1">
+                  Link Your Source of Income
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Select your employer or payroll provider to instantly verify
+                  your salary.
+                </p>
+              </div>
+              <div className="hidden md:block">
+                <img
+                  src="https://portal.getsmileapi.com/static/logo.png"
+                  alt="Smile API"
+                  className="h-6 opacity-50"
+                />
+              </div>
+            </div>
 
-            {/* Popular Banks */}
-            <div className="mb-6">
-              <h3 className="text-sm font-medium text-muted-foreground mb-4">
-                Popular Providers
-              </h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {/* Popular Providers Grid */}
+            <div className="mb-8">
+              <div className="flex items-center gap-2 mb-4">
+                <TrendingUp className="w-4 h-4 text-primary" />
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                  Popular Employers & Portals
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                 {popularBanks?.map((bank) => (
                   <button
                     key={bank.id}
                     onClick={() => connectToBank(bank.id, bank.name)}
-                    className="flex items-center gap-3 p-4 rounded-lg border-2 border-[#e2e8f0] bg-white hover:border-primary hover:shadow-md transition-all duration-200"
+                    className="group flex flex-col items-center justify-center p-6 rounded-xl border border-[#e2e8f0] bg-white hover:border-primary hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
                   >
-                    <span className="text-3xl">
+                    <div className="w-16 h-16 mb-4 flex items-center justify-center bg-gray-50 rounded-2xl group-hover:bg-primary/5 transition-colors">
                       <img
                         src={bank.logo}
-                        style={{ width: 55, borderRadius: 15 }}
+                        alt={bank.name}
+                        className="w-12 h-12 object-contain rounded-lg"
                       />
-                    </span>
-                    <span className="font-medium text-foreground">
+                    </div>
+                    <span className="font-semibold text-center text-foreground group-hover:text-primary transition-colors">
                       {bank.name}
                     </span>
                   </button>
@@ -246,35 +307,35 @@ export function BankVerificationStep({
               </div>
             </div>
 
-            {/* All Banks Button */}
+            {/* Divider */}
+            <div className="relative my-10">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-gray-200"></span>
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-4 text-muted-foreground font-medium">
+                  Or Search All Providers
+                </span>
+              </div>
+            </div>
+
+            {/* Primary SDK Entry Button */}
             <button
-              onClick={() => setShowBankList(!showBankList)}
-              className="w-full px-6 py-3 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/80 transition-colors font-medium flex items-center justify-center gap-2"
+              onClick={() => connectToBank("", "")}
+              className="w-full group relative px-8 py-5 bg-primary text-primary-foreground rounded-2xl hover:bg-primary/90 transition-all shadow-lg hover:shadow-primary/25 font-bold text-lg overflow-hidden"
             >
-              <Building2 className="w-5 h-5" />
-              {showBankList ? "Hide All Providers" : "View All Providers"}
+              <div className="relative z-10 flex items-center justify-center gap-3">
+                <Building2 className="w-6 h-6" />
+                <span>Connect Work Account</span>
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
             </button>
 
-            {/* All Banks List */}
-            {showBankList && (
-              <div className="mt-4 p-4 bg-background rounded-lg border border-[#e2e8f0] max-h-64 overflow-y-auto">
-                <div className="space-y-2">
-                  {allBanks.map((bank) => (
-                    <button
-                      key={bank.id}
-                      onClick={() => connectToBank(bank.id, bank.name)}
-                      className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-white transition-colors text-left"
-                    >
-                      <span className="text-2xl">{bank.logo}</span>
-                      <span className="font-medium text-foreground">
-                        {bank.name}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </>
+            <p className="text-center text-xs text-muted-foreground mt-4 flex items-center justify-center gap-1">
+              <Shield className="w-3 h-3" />
+              Secure encrypted connection powered by Smile API
+            </p>
+          </div>
         )}
 
         {connectionStatus === "connecting" && !isOpen && (
@@ -306,7 +367,7 @@ export function BankVerificationStep({
               </div>
               <div className="flex-1">
                 <h2 className="text-success mb-1">
-                  Bank Connected Successfully!
+                  Employment Account Connected Successfully!
                 </h2>
                 <p className="text-sm text-muted-foreground">
                   {selectedBank} • Account verified
@@ -411,7 +472,7 @@ export function BankVerificationStep({
               className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2"
             >
               <Building2 className="w-4 h-4" />
-              Connect a different bank
+              Connect a employment account
             </button>
           </div>
         )}
@@ -423,7 +484,7 @@ export function BankVerificationStep({
             </div>
             <h2 className="mb-2 text-destructive">Connection Failed</h2>
             <p className="text-muted-foreground mb-6">
-              We couldn't connect to your bank. Please try again.
+              We couldn't connect to your employment account. Please try again.
             </p>
             <button
               onClick={() => setConnectionStatus("idle")}
@@ -442,7 +503,9 @@ export function BankVerificationStep({
             <ExternalLink className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h3 className="text-primary mb-2">Why connect your bank?</h3>
+            <h3 className="text-primary mb-2">
+              Why connect your employment account?
+            </h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li className="flex items-start gap-2">
                 <span className="text-primary mt-0.5">•</span>
@@ -489,7 +552,7 @@ export function BankVerificationStep({
         >
           {canProceed
             ? "Continue to Identity Verification"
-            : "Connect your bank to continue"}
+            : "Connect your employment account to continue"}
         </button>
       </div>
     </div>

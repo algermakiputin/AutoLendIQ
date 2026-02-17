@@ -1,4 +1,5 @@
-import { projectId, publicAnonKey } from "../../utils/supabase/info";
+import { projectId, publicAnonKey } from "/utils/supabase/info";
+
 const API_BASE_URL = `https://${projectId}.supabase.co/functions/v1/make-server-aa912fb4`;
 
 interface ApiResponse<T> {
@@ -50,9 +51,27 @@ export interface LoanApplicationData {
   ai_score?: number;
   ai_recommendation?: string;
   ai_confidence?: number;
-  status: "pending" | "approved" | "rejected" | "under_review";
+  status:
+    | "pending"
+    | "approved"
+    | "rejected"
+    | "under_review"
+    | "pending_final_approval"
+    | "fully_approved"
+    | "disbursed";
   created_at?: string;
   updated_at?: string;
+  // Accepted offer details (from multi-bank flow)
+  accepted_bank_id?: string;
+  accepted_bank_name?: string;
+  accepted_bank_logo?: string;
+  accepted_offer_rate?: number;
+  accepted_offer_term?: number;
+  accepted_offer_amount?: number;
+  accepted_offer_monthly_payment?: number;
+  accepted_offer_total_interest?: number;
+  accepted_offer_processing_fee?: number;
+  accepted_at?: string;
 }
 
 export interface AIAssessmentData {
@@ -98,6 +117,24 @@ export async function createLoanApplication(
     method: "POST",
     body: JSON.stringify(data),
   });
+}
+
+export interface LoanData {
+  applicantName: string | undefined;
+  applicantEmail: string | undefined;
+  applicantPhone: string | undefined;
+  purpose: string | undefined;
+  amount: 1500000;
+  interestRate: 7.5;
+  term: 48;
+  monthlyPayment: 36414.38;
+  selectedBankIds: string[] | undefined;
+  documents: File[];
+  bankConnected: boolean;
+  bankName: string | undefined;
+  accountVerified: boolean;
+  accountBalance: number | undefined;
+  monthlyIncome: number | undefined;
 }
 
 export async function getAllLoanApplications(): Promise<LoanApplicationData[]> {

@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { LoanApplicationWizard } from "./components/loan-application-wizard";
+import { LoanOffersPage } from "./components/loan-offers-page";
 import { SmartApplicationProgress } from "./components/smart-application-progress";
 import { LoanReviewDashboard } from "./components/loan-review-dashboard";
 import { ApproverLogin } from "./components/approver-login";
 import { ApproverDashboard } from "./components/approver-dashboard";
 import { ApplicationReviewDetail } from "./components/application-review-detail";
+import { BankPartnerAdmin } from "./components/bank-partner-admin";
 import { DatabaseSetupNotice } from "./components/database-setup-notice";
 import {
   Sparkles,
@@ -19,17 +21,22 @@ import {
   AlertTriangle,
   CheckCircle2,
   FileText,
+  Building2,
 } from "lucide-react";
 import { createApproverAction } from "../utils/api";
+import { MOCK_BANK_PARTNERS } from "./data/bank-partners";
+import logo from "figma:asset/f0f1e75fbe24cb57ad970f880f03d951e07279ad.png";
 
 type View =
   | "landing"
   | "application"
+  | "offers"
   | "review"
   | "approver-login"
   | "approver-dashboard"
   | "approver-review"
-  | "progress-demo";
+  | "progress-demo"
+  | "bank-admin";
 
 interface Approver {
   name: string;
@@ -43,26 +50,27 @@ export default function App() {
   const [reviewingApplicationId, setReviewingApplicationId] = useState<
     string | null
   >(null);
+  const [loanData, setLoanData] = useState<any>(null);
 
   // Simulated live metrics that update
   const [liveMetrics, setLiveMetrics] = useState({
-    approvalTime: 4.2,
+    approvalTime: 35,
     fraudAccuracy: 99.8,
     activeTasks: 142,
   });
 
-  useEffect(() => {
-    // Simulate live metrics updates
-    const interval = setInterval(() => {
-      setLiveMetrics({
-        approvalTime: +(4.0 + Math.random() * 0.5).toFixed(1),
-        fraudAccuracy: +(99.7 + Math.random() * 0.2).toFixed(1),
-        activeTasks: Math.floor(138 + Math.random() * 8),
-      });
-    }, 3000);
+  // useEffect(() => {
+  //   // Simulate live metrics updates
+  //   const interval = setInterval(() => {
+  //     setLiveMetrics({
+  //       approvalTime: +(4.0 + Math.random() * 0.5).toFixed(1),
+  //       fraudAccuracy: +(99.7 + Math.random() * 0.2).toFixed(1),
+  //       activeTasks: Math.floor(138 + Math.random() * 8),
+  //     });
+  //   }, 3000);
 
-    return () => clearInterval(interval);
-  }, []);
+  //   return () => clearInterval(interval);
+  // }, []);
 
   const handleApproverLogin = (loggedInApprover: Approver) => {
     setApprover(loggedInApprover);
@@ -119,6 +127,7 @@ export default function App() {
                 AI-Powered Agentic Orchestration
               </span>
             </div>
+
             <h1 className="text-primary mb-3 sm:mb-4 text-3xl sm:text-4xl lg:text-5xl">
               AutoLend IQ
             </h1>
@@ -144,7 +153,7 @@ export default function App() {
                       Avg Approval Time
                     </p>
                     <p className="text-xl sm:text-2xl font-bold text-primary">
-                      {liveMetrics.approvalTime}s
+                      {liveMetrics.approvalTime}M
                       <span className="text-xs ml-1 text-success">⚡ Live</span>
                     </p>
                   </div>
@@ -171,7 +180,7 @@ export default function App() {
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground uppercase tracking-wide">
-                      Active Agentic Tasks
+                      Completed Agentic Tasks
                     </p>
                     <p className="text-xl sm:text-2xl font-bold text-warning">
                       {liveMetrics.activeTasks}
@@ -329,140 +338,113 @@ export default function App() {
             </div>
           </div>
 
-          {/* Portal Selection Cards */}
+          {/* Bank Partners Showcase */}
           <div className="mb-8 sm:mb-12 lg:mb-16">
             <div className="text-center mb-6 sm:mb-8">
-              <h2 className="text-xl sm:text-2xl font-bold text-primary mb-2">
-                Choose Your Path
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium mb-3">
+                <Building2 className="w-3 h-3" />
+                Our Lending Network
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-bold text-primary mb-2">
+                Trusted by Leading Philippine Banks
               </h2>
-              <p className="text-sm sm:text-base text-muted-foreground">
-                Select your role to get started
+              <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto">
+                We partner with {MOCK_BANK_PARTNERS.length} financial
+                institutions to bring you the best loan offers. Apply once, get
+                multiple pre-approved offers.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto">
-              {/* Applicant Portal - Light Theme */}
-              <button
-                onClick={() => setCurrentView("application")}
-                className="relative overflow-hidden bg-white rounded-2xl p-6 sm:p-8 border-2 border-primary/20 hover:border-primary shadow-lg hover:shadow-2xl transition-all duration-300 text-left group"
-              >
-                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500"></div>
-                <div className="relative z-10">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium mb-4">
-                    <Sparkles className="w-3 h-3" />
-                    Customer Portal
-                  </div>
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 group-hover:shadow-xl transition-all duration-300">
-                    <Sparkles className="w-7 h-7 sm:w-8 sm:h-8 text-primary-foreground" />
-                  </div>
-                  <h2 className="text-foreground mb-2 sm:mb-3 text-xl sm:text-2xl">
-                    Apply for a Loan
-                  </h2>
-                  <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
-                    Mag-apply para sa personal loan gamit ang aming AI-powered
-                    platform. Mabilis, secure, at transparent.
-                  </p>
-                  <div className="flex items-center gap-2 text-primary font-semibold">
-                    <span>Start Your Application</span>
-                    <svg
-                      className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-300"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13 7l5 5m0 0l-5 5m5-5H6"
-                      />
-                    </svg>
-                  </div>
-                </div>
-              </button>
+            {/* Bank Stats */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+              <div className="bg-white rounded-lg p-4 border border-[#e2e8f0] text-center">
+                <p className="text-3xl font-bold text-primary mb-1">
+                  {MOCK_BANK_PARTNERS.length}
+                </p>
+                <p className="text-xs text-muted-foreground">Bank Partners</p>
+              </div>
+              <div className="bg-white rounded-lg p-4 border border-[#e2e8f0] text-center">
+                <p className="text-3xl font-bold text-success mb-1">
+                  {Math.min(
+                    ...MOCK_BANK_PARTNERS.map((b) => b.interestRateRange[0]),
+                  )}
+                  %
+                </p>
+                <p className="text-xs text-muted-foreground">Lowest Rate</p>
+              </div>
+              <div className="bg-white rounded-lg p-4 border border-[#e2e8f0] text-center">
+                <p className="text-3xl font-bold text-warning mb-1">₱5M</p>
+                <p className="text-xs text-muted-foreground">Max Loan Amount</p>
+              </div>
+              <div className="bg-white rounded-lg p-4 border border-[#e2e8f0] text-center">
+                <p className="text-3xl font-bold text-primary mb-1">
+                  {Math.round(
+                    (MOCK_BANK_PARTNERS.reduce(
+                      (acc, b) => acc + b.approvalRate,
+                      0,
+                    ) /
+                      MOCK_BANK_PARTNERS.length) *
+                      100,
+                  )}
+                  %
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Avg Approval Rate
+                </p>
+              </div>
+            </div>
 
-              {/* Approver Portal - Dark Theme */}
-              <button
-                onClick={() => setCurrentView("approver-login")}
-                className="relative overflow-hidden bg-gradient-to-br from-[#1A2B48] to-[#152038] rounded-2xl p-8 border-2 border-success/30 hover:border-success shadow-lg hover:shadow-2xl transition-all duration-300 text-left group"
-              >
-                <div className="absolute top-0 right-0 w-32 h-32 bg-success/10 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500"></div>
-                <div className="relative z-10">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-success/20 text-success rounded-full text-xs font-medium mb-4 border border-success/30">
-                    <Shield className="w-3 h-3" />
-                    Admin Portal
-                  </div>
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-success to-success/60 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:shadow-xl transition-all duration-300">
-                    <FileText className="w-8 h-8 text-success-foreground" />
-                  </div>
-                  <h2 className="text-white mb-3 text-2xl">Agent Portal</h2>
-                  <p className="text-white/70 mb-6 leading-relaxed">
-                    Review and approve loan applications. Access comprehensive
-                    AI recommendations and make final decisions.
-                  </p>
-                  <div className="flex items-center gap-2 text-success font-semibold">
-                    <span>Access Agent Dashboard</span>
-                    <svg
-                      className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-300"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13 7l5 5m0 0l-5 5m5-5H6"
+            {/* Bank Logos Grid */}
+            <div className="bg-white rounded-xl p-6 sm:p-8 border border-[#e2e8f0] shadow-lg">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
+                {MOCK_BANK_PARTNERS.filter((b) => b.isActive).map((bank) => (
+                  <div
+                    key={bank.id}
+                    className="flex flex-col items-center justify-center group"
+                  >
+                    <div className="relative w-20 h-20 mb-3 rounded-xl overflow-hidden border-2 border-[#e2e8f0] group-hover:border-primary/50 transition-all duration-300 group-hover:shadow-lg">
+                      <img
+                        src={bank.logoUrl}
+                        alt={bank.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                       />
-                    </svg>
+                    </div>
+                    <p className="text-xs font-semibold text-foreground text-center group-hover:text-primary transition-colors">
+                      {bank.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground text-center mt-1">
+                      from {bank.interestRateRange[0]}%
+                    </p>
                   </div>
-                </div>
-              </button>
+                ))}
+              </div>
 
-              {/* Progress Demo - Gradient Theme */}
-              <button
-                onClick={() => setCurrentView("progress-demo")}
-                className="relative overflow-hidden bg-gradient-to-br from-success via-primary to-warning rounded-2xl p-8 border-2 border-warning/30 hover:border-warning shadow-lg hover:shadow-2xl transition-all duration-300 text-left group"
-              >
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500"></div>
-                <div className="relative z-10">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/20 text-white rounded-full text-xs font-medium mb-4 border border-white/30 backdrop-blur-sm">
-                    <Zap className="w-3 h-3" />
-                    Live Demo
+              {/* CTA Banner */}
+              <div className="mt-8 pt-8 border-t border-[#e2e8f0]">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-gradient-to-r from-primary/5 to-success/5 rounded-lg p-4 sm:p-6">
+                  <div className="text-center sm:text-left">
+                    <h3 className="text-lg font-semibold text-foreground mb-1">
+                      Ready to compare offers?
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Submit one application and receive multiple pre-approved
+                      loan offers
+                    </p>
                   </div>
-                  <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-6 group-hover:scale-110 group-hover:shadow-xl transition-all duration-300">
-                    <Activity className="w-8 h-8 text-white" />
-                  </div>
-                  <h2 className="text-white mb-3 text-2xl">
-                    Progress Dashboard
-                  </h2>
-                  <p className="text-white/90 mb-6 leading-relaxed">
-                    Watch AI agents process applications in real-time. See the
-                    agent orchestration live with status terminal.
-                  </p>
-                  <div className="flex items-center gap-2 text-white font-semibold">
-                    <span>View Live Demo</span>
-                    <svg
-                      className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-300"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13 7l5 5m0 0l-5 5m5-5H6"
-                      />
-                    </svg>
-                  </div>
+                  <button
+                    onClick={() => setCurrentView("application")}
+                    className="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all font-semibold shadow-md hover:shadow-lg flex items-center gap-2 whitespace-nowrap"
+                  >
+                    Apply Now
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
                 </div>
-              </button>
+              </div>
             </div>
           </div>
 
           {/* Trust & Compliance Strip */}
-          <div className="bg-white rounded-xl p-8 border border-[#e2e8f0] shadow-lg">
+          <div className="bg-white rounded-xl p-8 border border-[#e2e8f0] shadow-lg mb-8 sm:mb-12">
             <div className="text-center mb-6">
               <h3 className="text-lg font-semibold text-foreground mb-2">
                 Enterprise-Grade Security & Compliance
@@ -540,6 +522,63 @@ export default function App() {
             </div>
           </div>
 
+          {/* Portal Access Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 sm:mb-12">
+            {/* Applicant Portal */}
+            <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl p-6 sm:p-8 border-2 border-primary/20 hover:border-primary/40 transition-all shadow-lg hover:shadow-xl group">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
+                  <FileText className="w-6 h-6 text-primary-foreground" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-foreground">
+                    Apply for a Loan
+                  </h3>
+                  <p className="text-sm text-muted-foreground">For Borrowers</p>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground mb-6">
+                Submit your loan application and get instant AI-powered
+                decisions from multiple Philippine banks. Compare offers and
+                choose the best one for you.
+              </p>
+              <button
+                onClick={() => setCurrentView("application")}
+                className="w-full px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all font-semibold shadow-md hover:shadow-lg flex items-center justify-center gap-2 group-hover:scale-105 transition-transform"
+              >
+                Start Application
+                <ArrowRight className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Loan Manager Portal */}
+            <div className="bg-gradient-to-br from-success/5 to-success/10 rounded-xl p-6 sm:p-8 border-2 border-success/20 hover:border-success/40 transition-all shadow-lg hover:shadow-xl group">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-xl bg-success flex items-center justify-center">
+                  <Users className="w-6 h-6 text-success-foreground" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-foreground">
+                    Loan Manager Dashboard
+                  </h3>
+                  <p className="text-sm text-muted-foreground">For Approvers</p>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground mb-6">
+                Review pending applications, verify AI recommendations, and
+                provide final approval decisions. Monitor application queues and
+                agent performance.
+              </p>
+              <button
+                onClick={() => setCurrentView("approver-login")}
+                className="w-full px-6 py-3 bg-success text-success-foreground rounded-lg hover:bg-success/90 transition-all font-semibold shadow-md hover:shadow-lg flex items-center justify-center gap-2 group-hover:scale-105 transition-transform"
+              >
+                Manager Login
+                <ArrowRight className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
           {/* Footer */}
           <div className="mt-12 text-center text-sm text-muted-foreground">
             <p className="mb-2">
@@ -559,6 +598,9 @@ export default function App() {
           onComplete={() => setCurrentView("review")}
           onBack={() => setCurrentView("landing")}
         />
+      )}
+      {currentView === "offers" && (
+        <LoanOffersPage onBack={() => setCurrentView("landing")} />
       )}
       {currentView === "review" && (
         <LoanReviewDashboard onBack={() => setCurrentView("landing")} />
@@ -587,6 +629,9 @@ export default function App() {
         )}
       {currentView === "progress-demo" && (
         <SmartApplicationProgress onBack={() => setCurrentView("landing")} />
+      )}
+      {currentView === "bank-admin" && (
+        <BankPartnerAdmin onBack={() => setCurrentView("landing")} />
       )}
     </div>
   );

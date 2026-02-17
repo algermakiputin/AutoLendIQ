@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { CheckCircle2, Clock, Sparkles, Shield, FileCheck, UserCheck, TrendingUp } from 'lucide-react';
+import { CheckCircle2, Clock, Sparkles, Shield, FileCheck, UserCheck, TrendingUp, Building2 } from 'lucide-react';
 import { createLoanApplication, createAIAssessment } from '../../utils/api';
+import { MOCK_BANK_PARTNERS } from '../data/bank-partners';
 
 interface AgentReviewStepProps {
   loanData: {
@@ -14,9 +15,12 @@ interface AgentReviewStepProps {
     accountVerified?: boolean;
     accountBalance?: number;
     monthlyIncome?: number;
+    applicantName?: string;
+    applicantEmail?: string;
+    applicantPhone?: string;
   };
   onBack: () => void;
-  onComplete?: () => void;
+  onComplete?: (applicationId: string) => void;
 }
 
 interface ProcessingStep {
@@ -62,9 +66,9 @@ export function AgentReviewStep({ loanData, onBack, onComplete }: AgentReviewSte
     },
     {
       id: 'approval',
-      title: 'Final Review',
-      description: 'Generating your personalized loan offer...',
-      icon: FileCheck,
+      title: 'Bank Offer Matching',
+      description: `Matching your profile with ${MOCK_BANK_PARTNERS.filter(b => b.isActive).length} partner banks...`,
+      icon: Building2,
       status: 'pending',
       progress: 0,
     },
@@ -153,8 +157,18 @@ export function AgentReviewStep({ loanData, onBack, onComplete }: AgentReviewSte
       const confidence = 80 + Math.random() * 15; // 80-95% confidence
       const recommendation = aiScore >= 85 ? 'Approve' : aiScore >= 75 ? 'Review' : 'Decline';
       
+      console.log('=== CREATING LOAN APPLICATION ===');
+      console.log('Applicant Name:', loanData.applicantName);
+      console.log('Applicant Email:', loanData.applicantEmail);
+      console.log('Applicant Phone:', loanData.applicantPhone);
+      console.log('Loan Amount:', loanData.amount);
+      console.log('Full Loan Data:', loanData);
+      
       // Create loan application
       const application = await createLoanApplication({
+        applicant_name: loanData.applicantName,
+        applicant_email: loanData.applicantEmail,
+        applicant_phone: loanData.applicantPhone,
         loan_amount: loanData.amount,
         interest_rate: loanData.interestRate,
         loan_term: loanData.term,
@@ -170,6 +184,10 @@ export function AgentReviewStep({ loanData, onBack, onComplete }: AgentReviewSte
         ai_confidence: confidence,
         status: 'under_review',
       });
+      
+      console.log('✅ Application created successfully:', application);
+      console.log('Application ID:', application.id);
+      console.log('==================================');
       
       setApplicationId(application.id!);
       
@@ -358,9 +376,9 @@ export function AgentReviewStep({ loanData, onBack, onComplete }: AgentReviewSte
               <CheckCircle2 className="w-8 h-8" />
             </div>
             <div>
-              <h2 className="text-primary mb-2">Application na Kumpleto!</h2>
+              <h2 className="text-primary mb-2">AI Review Complete!</h2>
               <p className="text-muted-foreground">
-                Ang iyong loan application ay natapos na ang AI review at handa na para sa final approval ng lending agent.
+                Your application has passed all verification checks. We're now preparing personalized loan offers from {MOCK_BANK_PARTNERS.filter(b => b.isActive).length} partner banks.
               </p>
             </div>
           </div>
@@ -369,66 +387,83 @@ export function AgentReviewStep({ loanData, onBack, onComplete }: AgentReviewSte
             <div className="mb-4">
               <div className="flex items-center gap-2 mb-3">
                 <FileCheck className="w-5 h-5 text-success" />
-                <p className="font-semibold text-foreground">Mga Naverify na Detalye:</p>
+                <p className="font-semibold text-foreground">Verified Details:</p>
               </div>
               <ul className="space-y-2 text-sm text-muted-foreground ml-7">
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-success" />
-                  <span>Identity verification - Kumpleto</span>
+                  <span>Identity verification - Complete</span>
                 </li>
                 {loanData.bankConnected && (
                   <li className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-success" />
-                    <span>Bank account at income verification - Kumpleto</span>
+                    <span>Bank account and income verification - Complete</span>
                   </li>
                 )}
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-success" />
-                  <span>Credit assessment - Kumpleto</span>
+                  <span>Credit assessment - Complete</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-success" />
-                  <span>Risk analysis - Kumpleto</span>
+                  <span>Risk analysis - Complete</span>
                 </li>
               </ul>
             </div>
 
-            <div className="grid grid-cols-2 gap-6 pt-4 border-t border-[#e2e8f0]">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Requested Amount</p>
-                <p className="text-2xl font-semibold text-primary">
-                  ₱{loanData.amount.toLocaleString('en-PH')}
-                </p>
+            <div className="pt-4 border-t border-[#e2e8f0]">
+              <div className="flex items-center gap-2 mb-3">
+                <Building2 className="w-5 h-5 text-primary" />
+                <p className="font-semibold text-foreground">Your Loan Request:</p>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Interest Rate</p>
-                <p className="text-2xl font-semibold text-foreground">
-                  {loanData.interestRate}% APR
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Loan Term</p>
-                <p className="text-2xl font-semibold text-foreground">
-                  {loanData.term} buwan
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Monthly Payment</p>
-                <p className="text-2xl font-semibold text-foreground">
-                  ₱{loanData.monthlyPayment.toLocaleString('en-PH', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}
-                </p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Amount Requested</p>
+                  <p className="text-xl font-semibold text-primary">
+                    ₱{loanData.amount.toLocaleString('en-PH')}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Desired Term</p>
+                  <p className="text-xl font-semibold text-foreground">
+                    {loanData.term} months
+                  </p>
+                </div>
               </div>
             </div>
 
-            <div className="pt-4 bg-warning/5 border border-warning/20 rounded-lg p-4">
+            <div className="pt-4 bg-success/5 border border-success/20 rounded-lg p-4">
               <div className="flex items-start gap-3">
-                <Clock className="w-5 h-5 text-warning flex-shrink-0 mt-0.5" />
+                <Building2 className="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-medium text-foreground text-sm mb-1">Naghihintay ng Agent Approval</p>
-                  <p className="text-sm text-muted-foreground">
-                    Ang lending agent ay magsusuri ng iyong application at magbibigay ng final decision sa loob ng 24-48 oras.
-                    Makakatanggap ka ng email notification kapag natapos na ang review.
+                  <p className="font-medium text-foreground text-sm mb-1">
+                    Generating Offers from {MOCK_BANK_PARTNERS.filter(b => b.isActive).length} Banks
                   </p>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    We're now preparing personalized loan offers based on your profile. Each bank will provide customized terms and rates.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {MOCK_BANK_PARTNERS.filter(b => b.isActive).slice(0, 5).map((bank) => (
+                      <div
+                        key={bank.id}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-full border border-[#e2e8f0] text-xs"
+                      >
+                        <div className="w-5 h-5 rounded-full overflow-hidden">
+                          <img
+                            src={bank.logoUrl}
+                            alt={bank.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <span className="font-medium text-foreground">{bank.name}</span>
+                      </div>
+                    ))}
+                    {MOCK_BANK_PARTNERS.filter(b => b.isActive).length > 5 && (
+                      <div className="flex items-center px-3 py-1.5 bg-primary/10 rounded-full text-xs font-medium text-primary">
+                        +{MOCK_BANK_PARTNERS.filter(b => b.isActive).length - 5} more
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -438,10 +473,10 @@ export function AgentReviewStep({ loanData, onBack, onComplete }: AgentReviewSte
           {onComplete && (
             <div className="mt-6">
               <button
-                onClick={onComplete}
+                onClick={() => onComplete(applicationId!)}
                 className="w-full px-8 py-4 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 shadow-md hover:shadow-lg transition-all duration-200 font-semibold flex items-center justify-center gap-2"
               >
-                Tingnan ang Full Dashboard
+                View All Bank Offers
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>

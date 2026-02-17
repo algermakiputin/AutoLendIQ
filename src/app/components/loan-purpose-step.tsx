@@ -6,6 +6,7 @@ interface LoanPurposeStepProps {
   };
   setLoanData: (data: any) => void;
   onNext: () => void;
+  onBack: () => void;
 }
 
 const purposes = [
@@ -47,7 +48,7 @@ const purposes = [
   }
 ];
 
-export function LoanPurposeStep({ loanData, setLoanData, onNext }: LoanPurposeStepProps) {
+export function LoanPurposeStep({ loanData, setLoanData, onNext, onBack }: LoanPurposeStepProps) {
   const handleSelectPurpose = (purposeId: string) => {
     setLoanData({ ...loanData, purpose: purposeId });
     // Auto-advance after selection with a small delay for visual feedback
@@ -142,6 +143,16 @@ export function LoanPurposeStep({ loanData, setLoanData, onNext }: LoanPurposeSt
           className="text-sm text-muted-foreground hover:text-primary transition-colors"
         >
           Skip for now
+        </button>
+      </div>
+
+      {/* Back Button */}
+      <div className="flex justify-center mt-6">
+        <button
+          onClick={onBack}
+          className="px-8 py-3 border-2 border-[#e2e8f0] rounded-lg hover:border-primary/50 hover:bg-primary/5 transition-colors font-medium text-foreground"
+        >
+          Back
         </button>
       </div>
     </div>

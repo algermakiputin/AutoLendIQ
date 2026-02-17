@@ -1,8 +1,8 @@
-import { createClient } from "npm:@supabase/supabase-js";
+import { createClient } from 'npm:@supabase/supabase-js';
 
 const supabase = createClient(
-  Deno.env.get("SUPABASE_URL") ?? "",
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+  Deno.env.get('SUPABASE_URL') ?? '',
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 );
 
 // Types for our database schema
@@ -24,9 +24,20 @@ export interface LoanApplication {
   ai_score?: number;
   ai_recommendation?: string;
   ai_confidence?: number;
-  status: "pending" | "approved" | "rejected" | "under_review";
+  status: 'pending' | 'approved' | 'rejected' | 'under_review' | 'pending_final_approval' | 'fully_approved' | 'disbursed';
   created_at?: string;
   updated_at?: string;
+  // Accepted offer details (from multi-bank flow)
+  accepted_bank_id?: string;
+  accepted_bank_name?: string;
+  accepted_bank_logo?: string;
+  accepted_offer_rate?: number;
+  accepted_offer_term?: number;
+  accepted_offer_amount?: number;
+  accepted_offer_monthly_payment?: number;
+  accepted_offer_total_interest?: number;
+  accepted_offer_processing_fee?: number;
+  accepted_at?: string;
 }
 
 export interface AIAssessment {
@@ -51,7 +62,7 @@ export interface ApproverAction {
   application_id: string;
   approver_name: string;
   approver_email: string;
-  action: "approved" | "rejected";
+  action: 'approved' | 'rejected';
   justification: string;
   created_at?: string;
 }
@@ -70,33 +81,31 @@ export interface ApplicationStatusHistory {
 // Loan Application Functions
 export async function createLoanApplication(data: LoanApplication) {
   const { data: application, error } = await supabase
-    .from("loan_applications")
-    .insert([
-      {
-        applicant_name: data.applicant_name,
-        applicant_email: data.applicant_email,
-        applicant_phone: data.applicant_phone,
-        loan_amount: data.loan_amount,
-        interest_rate: data.interest_rate,
-        loan_term: data.loan_term,
-        monthly_payment: data.monthly_payment,
-        bank_name: data.bank_name,
-        bank_connected: data.bank_connected,
-        account_verified: data.account_verified,
-        account_balance: data.account_balance,
-        monthly_income: data.monthly_income,
-        identity_verified: data.identity_verified,
-        ai_score: data.ai_score,
-        ai_recommendation: data.ai_recommendation,
-        ai_confidence: data.ai_confidence,
-        status: data.status || "pending",
-      },
-    ])
+    .from('loan_applications')
+    .insert([{
+      applicant_name: data.applicant_name,
+      applicant_email: data.applicant_email,
+      applicant_phone: data.applicant_phone,
+      loan_amount: data.loan_amount,
+      interest_rate: data.interest_rate,
+      loan_term: data.loan_term,
+      monthly_payment: data.monthly_payment,
+      bank_name: data.bank_name,
+      bank_connected: data.bank_connected,
+      account_verified: data.account_verified,
+      account_balance: data.account_balance,
+      monthly_income: data.monthly_income,
+      identity_verified: data.identity_verified,
+      ai_score: data.ai_score,
+      ai_recommendation: data.ai_recommendation,
+      ai_confidence: data.ai_confidence,
+      status: data.status || 'pending',
+    }])
     .select()
     .single();
 
   if (error) {
-    console.error("Error creating loan application:", error);
+    console.error('Error creating loan application:', error);
     throw error;
   }
 
@@ -105,13 +114,13 @@ export async function createLoanApplication(data: LoanApplication) {
 
 export async function getLoanApplication(id: string) {
   const { data, error } = await supabase
-    .from("loan_applications")
-    .select("*")
-    .eq("id", id)
+    .from('loan_applications')
+    .select('*')
+    .eq('id', id)
     .single();
 
   if (error) {
-    console.error("Error fetching loan application:", error);
+    console.error('Error fetching loan application:', error);
     throw error;
   }
 
@@ -120,34 +129,31 @@ export async function getLoanApplication(id: string) {
 
 export async function getAllLoanApplications() {
   const { data, error } = await supabase
-    .from("loan_applications")
-    .select("*")
-    .order("created_at", { ascending: false });
+    .from('loan_applications')
+    .select('*')
+    .order('created_at', { ascending: false });
 
   if (error) {
-    console.error("Error fetching loan applications:", error);
+    console.error('Error fetching loan applications:', error);
     throw error;
   }
 
   return data;
 }
 
-export async function updateLoanApplication(
-  id: string,
-  updates: Partial<LoanApplication>,
-) {
+export async function updateLoanApplication(id: string, updates: Partial<LoanApplication>) {
   const { data, error } = await supabase
-    .from("loan_applications")
+    .from('loan_applications')
     .update({
       ...updates,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", id)
+    .eq('id', id)
     .select()
     .single();
 
   if (error) {
-    console.error("Error updating loan application:", error);
+    console.error('Error updating loan application:', error);
     throw error;
   }
 
@@ -157,13 +163,13 @@ export async function updateLoanApplication(
 // AI Assessment Functions
 export async function createAIAssessment(data: AIAssessment) {
   const { data: assessment, error } = await supabase
-    .from("ai_assessments")
+    .from('ai_assessments')
     .insert([data])
     .select()
     .single();
 
   if (error) {
-    console.error("Error creating AI assessment:", error);
+    console.error('Error creating AI assessment:', error);
     throw error;
   }
 
@@ -172,16 +178,15 @@ export async function createAIAssessment(data: AIAssessment) {
 
 export async function getAIAssessment(applicationId: string) {
   const { data, error } = await supabase
-    .from("ai_assessments")
-    .select("*")
-    .eq("application_id", applicationId)
-    .order("created_at", { ascending: false })
+    .from('ai_assessments')
+    .select('*')
+    .eq('application_id', applicationId)
+    .order('created_at', { ascending: false })
     .limit(1)
     .single();
 
-  if (error && error.code !== "PGRST116") {
-    // PGRST116 is "no rows returned"
-    console.error("Error fetching AI assessment:", error);
+  if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+    console.error('Error fetching AI assessment:', error);
     throw error;
   }
 
@@ -191,13 +196,13 @@ export async function getAIAssessment(applicationId: string) {
 // Approver Action Functions
 export async function createApproverAction(data: ApproverAction) {
   const { data: action, error } = await supabase
-    .from("approver_actions")
+    .from('approver_actions')
     .insert([data])
     .select()
     .single();
 
   if (error) {
-    console.error("Error creating approver action:", error);
+    console.error('Error creating approver action:', error);
     throw error;
   }
 
@@ -206,13 +211,13 @@ export async function createApproverAction(data: ApproverAction) {
 
 export async function getApproverActions(applicationId: string) {
   const { data, error } = await supabase
-    .from("approver_actions")
-    .select("*")
-    .eq("application_id", applicationId)
-    .order("created_at", { ascending: false });
+    .from('approver_actions')
+    .select('*')
+    .eq('application_id', applicationId)
+    .order('created_at', { ascending: false });
 
   if (error) {
-    console.error("Error fetching approver actions:", error);
+    console.error('Error fetching approver actions:', error);
     throw error;
   }
 
@@ -220,25 +225,19 @@ export async function getApproverActions(applicationId: string) {
 }
 
 // Status History Functions
-export async function addStatusHistory(
-  applicationId: string,
-  status: string,
-  notes?: string,
-) {
+export async function addStatusHistory(applicationId: string, status: string, notes?: string) {
   const { data, error } = await supabase
-    .from("application_status_history")
-    .insert([
-      {
-        application_id: applicationId,
-        status,
-        notes,
-      },
-    ])
+    .from('application_status_history')
+    .insert([{
+      application_id: applicationId,
+      status,
+      notes,
+    }])
     .select()
     .single();
 
   if (error) {
-    console.error("Error adding status history:", error);
+    console.error('Error adding status history:', error);
     throw error;
   }
 
@@ -247,13 +246,13 @@ export async function addStatusHistory(
 
 export async function getStatusHistory(applicationId: string) {
   const { data, error } = await supabase
-    .from("application_status_history")
-    .select("*")
-    .eq("application_id", applicationId)
-    .order("created_at", { ascending: true });
+    .from('application_status_history')
+    .select('*')
+    .eq('application_id', applicationId)
+    .order('created_at', { ascending: true });
 
   if (error) {
-    console.error("Error fetching status history:", error);
+    console.error('Error fetching status history:', error);
     throw error;
   }
 

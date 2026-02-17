@@ -11,9 +11,10 @@ interface LoanAmountStepProps {
   };
   setLoanData: (data: any) => void;
   onNext: () => void;
+  onBack: () => void;
 }
 
-export function LoanAmountStep({ loanData, setLoanData, onNext }: LoanAmountStepProps) {
+export function LoanAmountStep({ loanData, setLoanData, onNext, onBack }: LoanAmountStepProps) {
   const [amount, setAmount] = useState(loanData.amount);
   const [term, setTerm] = useState(loanData.term);
 
@@ -183,7 +184,13 @@ export function LoanAmountStep({ loanData, setLoanData, onNext }: LoanAmountStep
       </div>
 
       {/* Action Button */}
-      <div className="flex justify-end pt-4">
+      <div className="flex justify-between pt-4">
+        <button
+          onClick={onBack}
+          className="px-8 py-4 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 shadow-md hover:shadow-lg transition-all duration-200 font-medium"
+        >
+          Balik
+        </button>
         <button
           onClick={onNext}
           className="px-8 py-4 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 shadow-md hover:shadow-lg transition-all duration-200 font-medium"
