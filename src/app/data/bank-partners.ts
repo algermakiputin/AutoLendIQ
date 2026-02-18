@@ -19,7 +19,7 @@ export const MOCK_BANK_PARTNERS: BankPartner[] = [
     maxTerm: 60,
     baseInterestRate: 6.5,
     interestRateRange: [6.5, 9.5],
-    avgApprovalTime: "3-5 business days",
+    avgApprovalTime: "12-48 Hours",
     approvalRate: 0.68,
     processingFee: 1.5,
     features: [
@@ -49,7 +49,7 @@ export const MOCK_BANK_PARTNERS: BankPartner[] = [
     maxTerm: 60,
     baseInterestRate: 7.0,
     interestRateRange: [7.0, 10.0],
-    avgApprovalTime: "2-4 business days",
+    avgApprovalTime: "12-48 Hours",
     approvalRate: 0.72,
     processingFee: 1.5,
     features: [
@@ -79,7 +79,7 @@ export const MOCK_BANK_PARTNERS: BankPartner[] = [
     maxTerm: 60,
     baseInterestRate: 6.8,
     interestRateRange: [6.8, 9.8],
-    avgApprovalTime: "3-5 business days",
+    avgApprovalTime: "12-48 Hours",
     approvalRate: 0.7,
     processingFee: 1.5,
     features: [

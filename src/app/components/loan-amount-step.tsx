@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import * as Slider from '@radix-ui/react-slider';
-import { Banknote, Percent, Calendar, TrendingUp } from 'lucide-react';
+import { useState, useEffect } from "react";
+import * as Slider from "@radix-ui/react-slider";
+import { Banknote, Percent, Calendar, TrendingUp } from "lucide-react";
 
 interface LoanAmountStepProps {
   loanData: {
@@ -14,7 +14,12 @@ interface LoanAmountStepProps {
   onBack: () => void;
 }
 
-export function LoanAmountStep({ loanData, setLoanData, onNext, onBack }: LoanAmountStepProps) {
+export function LoanAmountStep({
+  loanData,
+  setLoanData,
+  onNext,
+  onBack,
+}: LoanAmountStepProps) {
   const [amount, setAmount] = useState(loanData.amount);
   const [term, setTerm] = useState(loanData.term);
 
@@ -27,7 +32,11 @@ export function LoanAmountStep({ loanData, setLoanData, onNext, onBack }: LoanAm
   };
 
   // Calculate monthly payment
-  const calculateMonthlyPayment = (principal: number, annualRate: number, months: number) => {
+  const calculateMonthlyPayment = (
+    principal: number,
+    annualRate: number,
+    months: number,
+  ) => {
     const monthlyRate = annualRate / 100 / 12;
     const payment =
       (principal * monthlyRate * Math.pow(1 + monthlyRate, months)) /
@@ -38,7 +47,7 @@ export function LoanAmountStep({ loanData, setLoanData, onNext, onBack }: LoanAm
   useEffect(() => {
     const interestRate = calculateInterestRate(amount);
     const monthlyPayment = calculateMonthlyPayment(amount, interestRate, term);
-    
+
     setLoanData({
       ...loanData,
       amount,
@@ -57,16 +66,19 @@ export function LoanAmountStep({ loanData, setLoanData, onNext, onBack }: LoanAm
       <div className="mb-8">
         <h1 className="mb-2 text-primary">Magkano ang kailangan mo?</h1>
         <p className="text-muted-foreground">
-          I-adjust ang loan amount at term para makita ang real-time na kalkulasyon ng iyong monthly payment.
+          I-adjust ang loan amount at term para makita ang real-time na
+          kalkulasyon ng iyong monthly payment.
         </p>
       </div>
 
       {/* Main Loan Amount Card */}
       <div className="bg-card rounded-lg p-8 shadow-lg border border-[#e2e8f0]">
         <div className="mb-8">
-          <label className="text-sm text-muted-foreground mb-4 block">Halaga ng Loan</label>
+          <label className="text-sm text-muted-foreground mb-4 block">
+            Halaga ng Loan
+          </label>
           <div className="text-5xl font-semibold text-primary mb-2">
-            ₱{amount.toLocaleString('en-PH')}
+            ₱{amount.toLocaleString("en-PH")}
           </div>
           <p className="text-sm text-muted-foreground">
             Range: ₱250,000 - ₱5,000,000
@@ -93,7 +105,9 @@ export function LoanAmountStep({ loanData, setLoanData, onNext, onBack }: LoanAm
 
         {/* Loan Term Selector */}
         <div className="mb-8">
-          <label className="text-sm text-muted-foreground mb-4 block">Tagal ng Loan (buwan)</label>
+          <label className="text-sm text-muted-foreground mb-4 block">
+            Tagal ng Loan (buwan)
+          </label>
           <div className="grid grid-cols-3 gap-3">
             {[24, 36, 48, 60, 72, 84].map((months) => (
               <button
@@ -103,8 +117,8 @@ export function LoanAmountStep({ loanData, setLoanData, onNext, onBack }: LoanAm
                   px-4 py-3 rounded-lg border-2 transition-all duration-200
                   ${
                     term === months
-                      ? 'border-primary bg-primary text-primary-foreground shadow-md'
-                      : 'border-[#e2e8f0] bg-white hover:border-primary/50 hover:shadow-sm'
+                      ? "border-primary bg-primary text-primary-foreground shadow-md"
+                      : "border-[#e2e8f0] bg-white hover:border-primary/50 hover:shadow-sm"
                   }
                 `}
               >
@@ -125,7 +139,11 @@ export function LoanAmountStep({ loanData, setLoanData, onNext, onBack }: LoanAm
               <div>
                 <p className="text-sm text-muted-foreground">Buwanang Bayad</p>
                 <p className="text-2xl font-semibold text-primary">
-                  ₱{loanData.monthlyPayment.toLocaleString('en-PH', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}
+                  ₱
+                  {loanData.monthlyPayment.toLocaleString("en-PH", {
+                    maximumFractionDigits: 2,
+                    minimumFractionDigits: 2,
+                  })}
                 </p>
               </div>
             </div>
@@ -138,7 +156,9 @@ export function LoanAmountStep({ loanData, setLoanData, onNext, onBack }: LoanAm
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Interest Rate</p>
-                <p className="font-semibold text-foreground">{loanData.interestRate}% APR</p>
+                <p className="font-semibold text-foreground">
+                  {loanData.interestRate}% APR
+                </p>
               </div>
             </div>
 
@@ -147,8 +167,16 @@ export function LoanAmountStep({ loanData, setLoanData, onNext, onBack }: LoanAm
                 <Calendar className="w-4 h-4 text-primary" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Kabuuang Interest</p>
-                <p className="font-semibold text-foreground">₱{totalInterest.toLocaleString('en-PH', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}</p>
+                <p className="text-xs text-muted-foreground">
+                  Kabuuang Interest
+                </p>
+                <p className="font-semibold text-foreground">
+                  ₱
+                  {totalInterest.toLocaleString("en-PH", {
+                    maximumFractionDigits: 2,
+                    minimumFractionDigits: 2,
+                  })}
+                </p>
               </div>
             </div>
 
@@ -158,7 +186,13 @@ export function LoanAmountStep({ loanData, setLoanData, onNext, onBack }: LoanAm
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Kabuuang Bayad</p>
-                <p className="font-semibold text-foreground">₱{totalPayment.toLocaleString('en-PH', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}</p>
+                <p className="font-semibold text-foreground">
+                  ₱
+                  {totalPayment.toLocaleString("en-PH", {
+                    maximumFractionDigits: 2,
+                    minimumFractionDigits: 2,
+                  })}
+                </p>
               </div>
             </div>
           </div>
@@ -170,15 +204,17 @@ export function LoanAmountStep({ loanData, setLoanData, onNext, onBack }: LoanAm
         <div className="bg-success/5 border border-success/20 rounded-lg p-6">
           <h3 className="text-success mb-2">Bakit ito ang rate?</h3>
           <p className="text-sm text-muted-foreground">
-            Ang iyong interest rate ay kinakalkula base sa halaga ng loan, tagal, at kasalukuyang kondisyon ng market.
-            Mas mababang halaga ay may mas magandang rate.
+            Ang iyong interest rate ay kinakalkula base sa halaga ng loan,
+            tagal, at kasalukuyang kondisyon ng market. Mas mababang halaga ay
+            may mas magandang rate.
           </p>
         </div>
 
         <div className="bg-primary/5 border border-primary/20 rounded-lg p-6">
           <h3 className="text-primary mb-2">Walang nakatagong bayad</h3>
           <p className="text-sm text-muted-foreground">
-            Ang nakikita mo ay ang makukuha mo. Walang origination fees, walang prepayment penalties, at walang sorpresa.
+            Ang nakikita mo ay ang makukuha mo. Walang origination fees, walang
+            prepayment penalties, at walang sorpresa.
           </p>
         </div>
       </div>
@@ -195,7 +231,7 @@ export function LoanAmountStep({ loanData, setLoanData, onNext, onBack }: LoanAm
           onClick={onNext}
           className="px-8 py-4 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 shadow-md hover:shadow-lg transition-all duration-200 font-medium"
         >
-          Magpatuloy sa Bank Connection
+          Magpatuloy sa Bank Selection
         </button>
       </div>
     </div>

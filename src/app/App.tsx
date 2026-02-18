@@ -54,7 +54,7 @@ export default function App() {
 
   // Simulated live metrics that update
   const [liveMetrics, setLiveMetrics] = useState({
-    approvalTime: 35,
+    approvalTime: 30,
     fraudAccuracy: 99.8,
     activeTasks: 142,
   });
